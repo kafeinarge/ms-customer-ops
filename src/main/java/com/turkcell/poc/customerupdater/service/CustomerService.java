@@ -13,12 +13,23 @@ import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.KafkaException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -41,17 +52,39 @@ public class CustomerService {
     private String kafkaCustomerTopic;
 
     final
+    CacheManager cacheManager;
+
+    final
     CustomerMapper customerMapper;
 
     final
     CustomerRepository customerRepository;
 
-    public CustomerService(CustomerMapper customerMapper, CustomerRepository customerRepository) {
+    public CustomerService(CustomerMapper customerMapper, CustomerRepository customerRepository, CacheManager cacheManager) {
         this.customerMapper = customerMapper;
         this.customerRepository = customerRepository;
+        this.cacheManager = cacheManager;
+    }
+
+    @Cacheable("customers")
+    public List<CustomerDTO> getCustomersByRange(Integer from, Integer size) {
+        Pageable page = PageRequest.of(from,size);
+        Page<Customer> customerPage = customerRepository.findAll(page);
+        List<Customer> customerList = customerPage.stream().collect(Collectors.toList());
+        return customerMapper.toDTOList(customerList);
+    }
+
+    public long count() {
+        return customerRepository.count();
+    }
+
+    @Async
+    void clearCache(String cacheName){
+        cacheManager.getCache(cacheName).clear();
     }
 
     public boolean updateCustomer(CustomerDTO customerDTO) {
+        clearCache("customers");
         Customer customer = customerMapper.toEntity(customerDTO);
 
         Customer newVersionOfCustomer = customerRepository.save(customer);
@@ -63,6 +96,7 @@ public class CustomerService {
 
     /**
      * send customer with new values to kafka
+     *
      * @param newVersionOfCustomer
      */
     private void sendToQueue(Customer newVersionOfCustomer) {

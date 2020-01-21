@@ -1,22 +1,56 @@
+## LOGGING
+#logging:
+#  level:
+#    org.springframework.web: DEBUG
+#
+#
+#  # APPLICATION
+#spring:
+#  application:
+#    name: turkcell-customer-updater-poc
+#  # MONGODB
+#  data:
+#    mongodb:
+#      authentication-database: admin
+#      database: ${MONGO_DB_NAME}
+#      host: ${MONGO_HOST}
+#      port: ${MONGO_PORT}
+#      username: ${MONGO_USERNAME}
+#      password: ${MONGO_PASSWORD}
+#
+#
+#kafka-client-id: customerupdaterclient
+#kafka-bootstrap-servers: ${KAFKA_URL}
+#kafka-producer-key-serializer: org.apache.kafka.common.serialization.ByteArraySerializer
+#kafka-producer-value-serializer: org.apache.kafka.common.serialization.StringSerializer
+#
+#kafka-customer-topic: customerupdater
+#
+#server:
+#  port: 8054
+#  servlet:
+#    context-path: /customer-updater
+
+
 # LOGGING
 logging:
   level:
-   org.springframework.web: DEBUG
+    org.springframework.web: DEBUG
 
 
   # APPLICATION
 spring:
   application:
-   name: turkcell-customer-updater-poc
+    name: turkcell-customer-updater-poc
   # MONGODB
   data:
-     mongodb:
-       authentication-database: admin
-       database: turkcell-customer-updater
-       host: 165.22.22.133
-       port: 31786
-       username: root
-       password: kafein2020!...
+    mongodb:
+      authentication-database: admin
+      database: turkcell-customer-updater
+      host: localhost
+      port: 27017
+      username: admin
+      password: pass
 
 
 kafka-client-id: customerupdaterclient
@@ -28,6 +62,6 @@ kafka-producer-value-serializer: org.apache.kafka.common.serialization.StringSer
 kafka-customer-topic: customerupdater
 
 server:
-  port: 8080
+  port: 8054
   servlet:
     context-path: /customer-updater

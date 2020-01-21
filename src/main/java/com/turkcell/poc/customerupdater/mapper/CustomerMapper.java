@@ -22,6 +22,7 @@ public class CustomerMapper implements BaseMapper<Customer, CustomerDTO> {
                 .surname(object.getSurname())
                 .tckn(object.getTckn())
                 .createdAt(new Date())
+                .id(object.getId())
                 .build();
     }
 
@@ -34,8 +35,11 @@ public class CustomerMapper implements BaseMapper<Customer, CustomerDTO> {
         return CustomerDTO
                 .builder()
                 .name(object.getName())
-                .surname(object.getName())
+                .surname(object.getSurname())
                 .tckn(object.getTckn())
+                .createdAt(object.getCreatedAt())
+                .updatedAt(object.getUpdatedAt())
+                .id(object.getId())
                 .build();
     }
 

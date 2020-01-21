@@ -7,6 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 import static com.turkcell.poc.customerupdater.util.CustomerConstants.CUSTOMER_FAILED;
 import static com.turkcell.poc.customerupdater.util.CustomerConstants.CUSTOMER_SUCCESS;
 
@@ -41,4 +43,38 @@ public class CustomerController {
     }
 
 
+    @GetMapping
+    public Response createCustomer(@RequestParam Integer from,@RequestParam Integer size) {
+        try {
+            List<CustomerDTO> customerDTOList = customerService.getCustomersByRange(from, size);
+            return Response.builder()
+                    .httpStatus(HttpStatus.OK.value())
+                    .data(customerDTOList)
+                    .build();
+        }
+        catch (Exception e) {
+            log.error("Customer cannot be found. ");
+            return Response.builder()
+                    .httpStatus(HttpStatus.SERVICE_UNAVAILABLE.value())
+                    .data(CUSTOMER_FAILED)
+                    .build();
+        }
+    }
+
+    @GetMapping("/count")
+    public Response countCustomer() {
+        try {
+            return Response.builder()
+                    .httpStatus(HttpStatus.OK.value())
+                    .data(customerService.count())
+                    .build();
+        }
+        catch (Exception e) {
+            log.error("Customer cannot be found. ");
+            return Response.builder()
+                    .httpStatus(HttpStatus.SERVICE_UNAVAILABLE.value())
+                    .data(CUSTOMER_FAILED)
+                    .build();
+        }
+    }
 }
