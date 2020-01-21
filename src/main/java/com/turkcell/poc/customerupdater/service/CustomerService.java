@@ -35,7 +35,6 @@ import java.util.stream.Collectors;
 @Slf4j
 public class CustomerService {
 
-
     @Value("${kafka-client-id}")
     private String kafkaClientId;
 
@@ -60,12 +59,26 @@ public class CustomerService {
     final
     CustomerRepository customerRepository;
 
+    private Producer producer;
+
+    /**
+     * all injections are set on constructor
+     * @param customerMapper
+     * @param customerRepository
+     * @param cacheManager
+     */
     public CustomerService(CustomerMapper customerMapper, CustomerRepository customerRepository, CacheManager cacheManager) {
         this.customerMapper = customerMapper;
         this.customerRepository = customerRepository;
         this.cacheManager = cacheManager;
     }
 
+    /**
+     * getting customer with from and size dividing data size to size
+     * @param from
+     * @param size
+     * @return
+     */
     @Cacheable("customers")
     public List<CustomerDTO> getCustomersByRange(Integer from, Integer size) {
         Pageable page = PageRequest.of(from,size);
@@ -74,15 +87,28 @@ public class CustomerService {
         return customerMapper.toDTOList(customerList);
     }
 
+    /**
+     * find count of all customer collection
+     * @return
+     */
     public long count() {
         return customerRepository.count();
     }
 
+    /**
+     * clearing cache using param that any cache's name. Uses when any store/updates
+     * @param cacheName
+     */
     @Async
     void clearCache(String cacheName){
         cacheManager.getCache(cacheName).clear();
     }
 
+    /**
+     * update customer with DTO object
+     * @param customerDTO
+     * @return
+     */
     public boolean updateCustomer(CustomerDTO customerDTO) {
         clearCache("customers");
         Customer customer = customerMapper.toEntity(customerDTO);
@@ -100,11 +126,10 @@ public class CustomerService {
      * @param newVersionOfCustomer
      */
     private void sendToQueue(Customer newVersionOfCustomer) {
-
         String topicName = kafkaCustomerTopic;
 
-        Properties kafkaProperties = createKafkaProperties();
-        Producer producer = new KafkaProducer<String, String>(kafkaProperties);
+        if(producer==null)
+            producer = createKafkaProducer();
 
         Gson gson = new Gson();
         String customerJsonToKafka = gson.toJson(newVersionOfCustomer);
@@ -123,11 +148,11 @@ public class CustomerService {
     }
 
     /**
-     * returns properties of kafka
+     * returns producer using kafka properties
      *
      * @return
      */
-    public Properties createKafkaProperties() {
+    public Producer createKafkaProducer() {
         Properties configProperties = new Properties();
         configProperties.put(ProducerConfig.CLIENT_ID_CONFIG, kafkaClientId);
         configProperties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
@@ -137,7 +162,7 @@ public class CustomerService {
         configProperties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
                 kafkaProducerValueSerializer);
 
-        return configProperties;
+        return new KafkaProducer<String, String>(configProperties);
     }
 
 }
