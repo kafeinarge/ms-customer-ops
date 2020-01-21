@@ -59,8 +59,6 @@ public class CustomerService {
     final
     CustomerRepository customerRepository;
 
-    private Producer producer;
-
     /**
      * all injections are set on constructor
      * @param customerMapper
@@ -128,8 +126,7 @@ public class CustomerService {
     private void sendToQueue(Customer newVersionOfCustomer) {
         String topicName = kafkaCustomerTopic;
 
-        if(producer==null)
-            producer = createKafkaProducer();
+        Producer producer = createKafkaProducer();
 
         Gson gson = new Gson();
         String customerJsonToKafka = gson.toJson(newVersionOfCustomer);
@@ -138,7 +135,8 @@ public class CustomerService {
                 topicName, customerJsonToKafka);
         try {
             producer.send(rec);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             log.error("Customer cannot send data successfully");
             throw new KafkaException();
         }
