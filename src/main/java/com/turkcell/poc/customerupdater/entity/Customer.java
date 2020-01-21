@@ -2,11 +2,11 @@ package com.turkcell.poc.customerupdater.entity;
 
 import com.turkcell.poc.customerupdater.entity.base.BaseEntity;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
+
+@SuperBuilder
 @ToString
 @EqualsAndHashCode(of = "tckn")
 @Data
@@ -18,6 +18,5 @@ public class Customer extends BaseEntity {
     private String name;
 
     private String surname;
-
 
 }

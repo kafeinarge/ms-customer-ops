@@ -13,14 +13,14 @@ spring:
      mongodb:
        authentication-database: admin
        database: turkcell-customer-updater
-       host: mongo
-       port: 31233
+       host: 165.22.22.133
+       port: 31786
        username: root
-       password: root
+       password: kafein2020!...
 
 
 kafka-client-id: customerupdaterclient
-kafka-bootstrap-servers: kafka:31357
+kafka-bootstrap-servers: 165.22.22.133:31847
 #kafka-bootstrap-servers: 207.154.232.181:31357
 kafka-producer-key-serializer: org.apache.kafka.common.serialization.ByteArraySerializer
 kafka-producer-value-serializer: org.apache.kafka.common.serialization.StringSerializer
@@ -28,6 +28,6 @@ kafka-producer-value-serializer: org.apache.kafka.common.serialization.StringSer
 kafka-customer-topic: customerupdater
 
 server:
-  port: 8064
+  port: 8080
   servlet:
     context-path: /customer-updater
