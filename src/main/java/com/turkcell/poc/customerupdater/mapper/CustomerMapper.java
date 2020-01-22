@@ -5,6 +5,8 @@ import com.turkcell.poc.customerupdater.entity.Customer;
 import com.turkcell.poc.customerupdater.mapper.base.BaseMapper;
 import org.springframework.stereotype.Component;
 
+import java.util.Date;
+
 @Component
 public class CustomerMapper implements BaseMapper<Customer, CustomerDTO> {
 
@@ -17,8 +19,10 @@ public class CustomerMapper implements BaseMapper<Customer, CustomerDTO> {
         return Customer
                 .builder()
                 .name(object.getName())
-                .surname(object.getName())
+                .surname(object.getSurname())
                 .tckn(object.getTckn())
+                .createdAt(new Date())
+                .id(object.getId())
                 .build();
     }
 
@@ -31,8 +35,11 @@ public class CustomerMapper implements BaseMapper<Customer, CustomerDTO> {
         return CustomerDTO
                 .builder()
                 .name(object.getName())
-                .surname(object.getName())
+                .surname(object.getSurname())
                 .tckn(object.getTckn())
+                .createdAt(object.getCreatedAt())
+                .updatedAt(object.getUpdatedAt())
+                .id(object.getId())
                 .build();
     }
 

@@ -13,16 +13,27 @@ import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.KafkaException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.Date;
+import java.util.List;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
 public class CustomerService {
-
 
     @Value("${kafka-client-id}")
     private String kafkaClientId;
@@ -40,17 +51,64 @@ public class CustomerService {
     private String kafkaCustomerTopic;
 
     final
+    CacheManager cacheManager;
+
+    final
     CustomerMapper customerMapper;
 
     final
     CustomerRepository customerRepository;
 
-    public CustomerService(CustomerMapper customerMapper, CustomerRepository customerRepository) {
+    /**
+     * all injections are set on constructor
+     * @param customerMapper
+     * @param customerRepository
+     * @param cacheManager
+     */
+    public CustomerService(CustomerMapper customerMapper, CustomerRepository customerRepository, CacheManager cacheManager) {
         this.customerMapper = customerMapper;
         this.customerRepository = customerRepository;
+        this.cacheManager = cacheManager;
     }
 
+    /**
+     * getting customer with from and size dividing data size to size
+     * @param from
+     * @param size
+     * @return
+     */
+    @Cacheable("customers")
+    public List<CustomerDTO> getCustomersByRange(Integer from, Integer size) {
+        Pageable page = PageRequest.of(from,size);
+        Page<Customer> customerPage = customerRepository.findAll(page);
+        List<Customer> customerList = customerPage.stream().collect(Collectors.toList());
+        return customerMapper.toDTOList(customerList);
+    }
+
+    /**
+     * find count of all customer collection
+     * @return
+     */
+    public long count() {
+        return customerRepository.count();
+    }
+
+    /**
+     * clearing cache using param that any cache's name. Uses when any store/updates
+     * @param cacheName
+     */
+    @Async
+    void clearCache(String cacheName){
+        cacheManager.getCache(cacheName).clear();
+    }
+
+    /**
+     * update customer with DTO object
+     * @param customerDTO
+     * @return
+     */
     public boolean updateCustomer(CustomerDTO customerDTO) {
+        clearCache("customers");
         Customer customer = customerMapper.toEntity(customerDTO);
 
         Customer newVersionOfCustomer = customerRepository.save(customer);
@@ -62,14 +120,13 @@ public class CustomerService {
 
     /**
      * send customer with new values to kafka
+     *
      * @param newVersionOfCustomer
      */
     private void sendToQueue(Customer newVersionOfCustomer) {
-
         String topicName = kafkaCustomerTopic;
 
-        Properties kafkaProperties = createKafkaProperties();
-        Producer producer = new KafkaProducer<String, String>(kafkaProperties);
+        Producer producer = createKafkaProducer();
 
         Gson gson = new Gson();
         String customerJsonToKafka = gson.toJson(newVersionOfCustomer);
@@ -78,7 +135,8 @@ public class CustomerService {
                 topicName, customerJsonToKafka);
         try {
             producer.send(rec);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             log.error("Customer cannot send data successfully");
             throw new KafkaException();
         }
@@ -88,11 +146,11 @@ public class CustomerService {
     }
 
     /**
-     * returns properties of kafka
+     * returns producer using kafka properties
      *
      * @return
      */
-    public Properties createKafkaProperties() {
+    public Producer createKafkaProducer() {
         Properties configProperties = new Properties();
         configProperties.put(ProducerConfig.CLIENT_ID_CONFIG, kafkaClientId);
         configProperties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
@@ -102,7 +160,7 @@ public class CustomerService {
         configProperties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
                 kafkaProducerValueSerializer);
 
-        return configProperties;
+        return new KafkaProducer<String, String>(configProperties);
     }
 
 }

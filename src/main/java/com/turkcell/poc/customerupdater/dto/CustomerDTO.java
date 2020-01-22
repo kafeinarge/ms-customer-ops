@@ -2,10 +2,12 @@ package com.turkcell.poc.customerupdater.dto;
 
 import com.turkcell.poc.customerupdater.dto.base.BaseEntityDTO;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
+@SuperBuilder
 @ToString
 @EqualsAndHashCode(of = "tckn")
 @Data
