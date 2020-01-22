@@ -1,4 +1,4 @@
-# crm-order-management-app
+# ms-customer-ops
 
 # Getting Started
 
