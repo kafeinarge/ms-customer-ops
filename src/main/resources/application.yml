@@ -24,7 +24,7 @@ kafka-bootstrap-servers: ${KAFKA_URL}
 kafka-producer-key-serializer: org.apache.kafka.common.serialization.ByteArraySerializer
 kafka-producer-value-serializer: org.apache.kafka.common.serialization.StringSerializer
 
-kafka-customer-topic: customerupdater
+kafka-customer-topic: ${KAFKA_CUSTOMER_TOPIC}
 
 server:
   port: 8054
